@@ -1,0 +1,62 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+server:
+  port: 8088
+  servlet:
+    threads:
+      max: 1000
+  tomcat:
+    threads:
+      max: 1000
+
+spring:
+  application:
+    name: competition-service
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    initialization-mode: never
+#    schema: classpath:schema.sql
+#    data: classpath:data.sql
+    druid:
+      #初始化时建立物理连接的个数
+      initial-size: 3
+      #最小连接池数量
+      min-idle: 3
+      #最大连接池数量
+      max-active: 100
+      #获取连接时最大等待时间
+      max-wait: 60000
+      filter:
+        stat:
+          #是否开启慢sql查询监控
+          log-slow-sql: true
+          #慢SQL执行时间
+          slow-sql-millis: 100
+      validation-query: select 1
+    sql-script-encoding: UTF-8
+
+mybatis:
+  #po对象的包
+  type-aliases-package: org.xpef.server.model.po
+  #mapper.xml所在的位置
+  mapper-locations: classpath*:org.xpef.server.mapper/*.xml
+  #自动将SQL中查出来的带下划线的字段，转换为驼峰标志，再去匹配类中的属性
+  configuration:
+    #输出产生的SQL
+   # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+competition:
+  #jwt 失效时间 /h
+  expire_time: 2
+  user:
+    depart_id: 0
+  #验证码失效时间 /分钟
+  code_expire_time: 5
