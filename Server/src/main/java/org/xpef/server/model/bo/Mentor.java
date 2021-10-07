@@ -3,7 +3,6 @@ package org.xpef.server.model.bo;
 import lombok.Data;
 import org.xpef.server.model.po.User;
 
-import javax.persistence.Id;
 
 @Data
 public class Mentor {

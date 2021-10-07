@@ -1,6 +1,5 @@
 package org.xpef.server.util;
 
-import core.util.ResponseCode;
 import lombok.Getter;
 
 import java.io.Serializable;
