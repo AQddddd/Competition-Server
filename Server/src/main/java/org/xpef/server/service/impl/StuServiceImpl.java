@@ -115,7 +115,7 @@ public class StuServiceImpl implements StuService {
     }
 
     @Override
-    public Result<Boolean> createStudent(Student student) {
+    public synchronized Result<Boolean> createStudent(Student student) {
         if (isStuExist(student)){
             return new Result<>(false,"user exists");
         }else {
