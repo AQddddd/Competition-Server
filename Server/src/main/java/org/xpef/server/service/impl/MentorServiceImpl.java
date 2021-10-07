@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.xpef.server.constrants.UserConstrant;
 import org.xpef.server.mapper.UserMapper;
 import org.xpef.server.model.bo.Mentor;
+import org.xpef.server.model.bo.Student;
 import org.xpef.server.model.po.User;
 import org.xpef.server.model.po.UserExample;
 import org.xpef.server.service.MentorService;
@@ -54,5 +55,21 @@ public class MentorServiceImpl implements MentorService {
             }
         }
         return mentors;
+    }
+
+    @Override
+    public List<Mentor> getAllMentors() {
+        UserExample userExample=new UserExample();
+        UserExample.Criteria criteria=userExample.createCriteria();
+
+        criteria.andIsDeletedEqualTo(UserConstrant.NOT_DELETE);
+        criteria.andIsMentorNotEqualTo(UserConstrant.STUDENT);
+        List<User> users=userMapper.selectByExample(userExample);
+        try {
+            return ParseUtil.parseFromUser(users, Mentor.class);
+        }catch (Exception e){
+            logger.error("get all mentors error. msg:{}",e.getMessage());
+            return null;
+        }
     }
 }

@@ -9,7 +9,6 @@ import org.xpef.server.model.po.User;
 @Data
 public class Student {
 
-
     private Integer id;
 
     private String xpNo;
@@ -68,7 +67,7 @@ public class Student {
 
     public void fixDefault(){
 
-        this.isFunded=UserConstrant.NOT_FUNDED;
+        this.isFunded=UserConstrant.FUNDED;
         this.isMentor=UserConstrant.STUDENT;
         this.isQualified=UserConstrant.QUALIFIED;
         this.isSystem= System.NORMAL;

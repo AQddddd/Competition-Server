@@ -41,4 +41,8 @@ public class Mentor {
 
     public Mentor(){}
 
+    public String nameAndId(){
+        return name+"_"+id;
+    }
+
 }

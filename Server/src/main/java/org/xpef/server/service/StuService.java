@@ -12,7 +12,7 @@ public interface StuService {
     /**
      * 获取所有未删除学生
      */
-    public List<Student> getAllStudents();
+    public List<Student> getAllStudents(int type);
 
     public List<Student> getStuByNames(List<String> stuNames);
 
@@ -20,7 +20,7 @@ public interface StuService {
 
     public List<Student> getStuByMentorName(String mentorName);
 
-    public Result<Student> createStudent(Student student);
+    public Result<Boolean> createStudent(Student student);
 
     public Result<Boolean> importInfo(List<Student> students);
 
@@ -29,6 +29,8 @@ public interface StuService {
     public Student getStuByEmail(String email);
 
     public Boolean updateStuInfo(Student student);
+
+    public Boolean delete(Integer id);
 
 
 }

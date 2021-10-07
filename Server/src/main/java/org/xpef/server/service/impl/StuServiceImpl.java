@@ -1,6 +1,7 @@
 package org.xpef.server.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import org.apache.tomcat.jni.Local;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -36,10 +37,11 @@ public class StuServiceImpl implements StuService {
     private MentorService mentorService;
 
     @Override
-    public List<Student> getAllStudents() {
+    public List<Student> getAllStudents(int type) {
         UserExample userExample=new UserExample();
         UserExample.Criteria criteria=userExample.createCriteria();
 
+        criteria.andIsFundedEqualTo(type);
         criteria.andIsDeletedEqualTo(UserConstrant.NOT_DELETE);
         criteria.andIsMentorNotEqualTo(UserConstrant.HK_MENTOR);
         List<User> users=userMapper.selectByExample(userExample);
@@ -53,7 +55,30 @@ public class StuServiceImpl implements StuService {
 
     @Override
     public List<Student> getStuByNames(List<String> stuNames) {
-        return null;
+        if (stuNames==null||stuNames.isEmpty())
+            return Collections.emptyList();
+        List<User> users=new ArrayList<>(stuNames.size());
+        for (String name:stuNames){
+            UserExample userExample=new UserExample();
+            UserExample.Criteria criteria=userExample.createCriteria();
+
+            criteria.andNameEqualTo(name);
+            criteria.andIsDeletedEqualTo(UserConstrant.NOT_DELETE);
+            criteria.andIsMentorNotEqualTo(UserConstrant.HK_MENTOR);
+
+            List<User> userList=userMapper.selectByExample(userExample);
+            if (userList!=null&&!userList.isEmpty())
+                users.add(userList.get(0));
+            else {
+                logger.info("can not find. userName--->{}",name);
+            }
+        }
+        try {
+            return ParseUtil.parseFromUser(users,Student.class);
+        }catch (Exception e){
+            logger.error("get users error. msg:{}",e.getMessage());
+            return null;
+        }
     }
 
     @Override
@@ -90,9 +115,30 @@ public class StuServiceImpl implements StuService {
     }
 
     @Override
-    public Result<Student> createStudent(Student student) {
+    public Result<Boolean> createStudent(Student student) {
+        if (isStuExist(student)){
+            return new Result<>(false,"user exists");
+        }else {
+            User user=student.toUser();
+            completeMentorInfo(user);
+            user.setPassword(DefaultValue.PASSWORD);
+            user.setIsDeleted(UserConstrant.NOT_DELETE);
+            user.setGmtCreated(LocalDateTime.now());
+            user.setGmtModified(LocalDateTime.now());
 
-        return null;
+            int ret=userMapper.insert(user);
+            if (ret<=0){
+                logger.error("insert error. info: {}",JSONObject.toJSONString(user));
+                return new Result<>(false,"insert error");
+            }else {
+                logger.info("insert success.");
+                String xpNo=XpNoHandle.buildXpNo(user.getId(),Integer.parseInt(user.getGrade()),user.getRegion());
+                user.setXpNo(xpNo);
+                //更新xpNo
+                updateStuInfo(new Student(user));
+                return new Result<>(true);
+            }
+        }
     }
 
     @Override
@@ -104,23 +150,9 @@ public class StuServiceImpl implements StuService {
             if (isStuExist(student)){
                 emailExist.add(student.getName());
             }else {
-                User user=student.toUser();
-                completeMentorInfo(user);
-                user.setPassword(DefaultValue.PASSWORD);
-                user.setIsDeleted(UserConstrant.NOT_DELETE);
-                user.setGmtCreated(LocalDateTime.now());
-                user.setGmtModified(LocalDateTime.now());
-
-                int ret=userMapper.insert(user);
-                if (ret<=0){
-                    logger.error("insert error. info: {}",JSONObject.toJSONString(user));
-                    error.add(user.getName());
-                }else {
-                    logger.info("insert success.");
-                    String xpNo=XpNoHandle.buildXpNo(user.getId(),Integer.parseInt(user.getGrade()),user.getRegion());
-                    user.setXpNo(xpNo);
-                    //更新xpNo
-                    updateStuInfo(new Student(user));
+                Result<Boolean> res=createStudent(student);
+                if (!res.getSuccess()){
+                    error.add(student.getName());
                 }
             }
 
@@ -174,9 +206,24 @@ public class StuServiceImpl implements StuService {
         return false;
     }
 
+    @Override
+    public Boolean delete(Integer id) {
+        User user=new User();
+        user.setId(id);
+        user.setIsDeleted(UserConstrant.DELETED);
+        user.setGmtModified(LocalDateTime.now());
+
+        int ret=userMapper.updateByPrimaryKeySelective(user);
+        if (ret>0){
+            logger.info("delete user success. id--->{}",id);
+            return true;
+        }
+        logger.error("delete error");
+        return false;
+    }
+
     /**
      * 将数据库user转化为student
-
      */
     private List<Student> parseToStu(List<User> users){
         if (users==null||users.isEmpty()){

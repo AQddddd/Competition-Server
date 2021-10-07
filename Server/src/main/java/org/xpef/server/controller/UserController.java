@@ -4,7 +4,10 @@ package org.xpef.server.controller;
 import com.alibaba.fastjson.JSONObject;
 
 import org.springframework.util.StringUtils;
+import org.xpef.server.constrants.UserConstrant;
+import org.xpef.server.model.bo.Mentor;
 import org.xpef.server.model.bo.Student;
+import org.xpef.server.service.MentorService;
 import org.xpef.server.service.StuService;
 import io.swagger.annotations.*;
 import org.slf4j.Logger;
@@ -18,6 +21,8 @@ import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 
 @Api(value = "用户信息服务相关", tags = "user")
@@ -29,9 +34,26 @@ public class UserController {
     @Resource
     private StuService stuService;
 
-    @RequestMapping(path = "student/list",method = RequestMethod.GET)
-    public Result<List<Student>> list(){
-        List<Student> students=stuService.getAllStudents();
+    @Resource
+    private MentorService mentorService;
+
+    /**
+     * 查看所有受助学生
+     * @return
+     */
+    @RequestMapping(path = "student/list/funded",method = RequestMethod.GET)
+    public Result<List<Student>> listFunded(){
+        List<Student> students=stuService.getAllStudents(UserConstrant.FUNDED);
+        return new Result<>(students);
+    }
+
+    /**
+     * 查看所有预受助学生
+     * @return
+     */
+    @RequestMapping(path = "student/list/not_fund",method = RequestMethod.GET)
+    public Result<List<Student>> listNotFund(){
+        List<Student> students=stuService.getAllStudents(UserConstrant.NOT_FUNDED);
         return new Result<>(students);
     }
 
@@ -50,10 +72,10 @@ public class UserController {
         }
 
         logger.info("create user. userinfo--->{}",student);
-        Result<Student> res=stuService.createStudent(newStu);
+        Result<Boolean> res=stuService.createStudent(newStu);
 
-        if (res.getSuccess()&&res.getData().getId()!=null){
-            logger.info("create success.  name:{} , idCard:{}",res.getData().getName(),res.getData().getIdCard());
+        if (res.getSuccess()&&res.getData()){
+            logger.info("create success.  name:{} ",newStu.getName());
             return new Result<>(true);
         }else {
             logger.error("create error. msg:{}",res.getErrMsg());
@@ -72,7 +94,6 @@ public class UserController {
         }
     }
 
-    @ApiOperation(value = "ss")
     @PutMapping(value = "student/updateInfo")
     public Result<Student> update(@RequestParam(name = "studentInfo")String studentInfo){
         if (StringUtils.isEmpty(studentInfo)){
@@ -94,6 +115,24 @@ public class UserController {
         }
 
     }
+
+    @GetMapping(value = "student/names")
+    public Result<List<String>> names(){
+        List<Student> students=stuService.getAllStudents(UserConstrant.FUNDED);
+        return new Result<>(students.stream().map(Student::getName).collect(Collectors.toList()));
+    }
+
+    @GetMapping(value = "mentor/nameAndIds")
+    public Result<List<String>> nameAndIdList(){
+        List<Mentor> mentors=mentorService.getAllMentors();
+        return new Result<>(mentors.stream().map((Mentor::nameAndId)).collect(Collectors.toList()));
+    }
+
+    @PutMapping(value = "delete/{userId}")
+    public Result<Boolean> delete(@PathVariable(name = "userId")Integer userId){
+        return new Result<>(stuService.delete(userId));
+    }
+
 
 
 

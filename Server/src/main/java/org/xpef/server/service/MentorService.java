@@ -7,4 +7,6 @@ import java.util.List;
 public interface MentorService {
 
     public List<Mentor> getMentorByNames(List<String> names);
+
+    public List<Mentor> getAllMentors();
 }
