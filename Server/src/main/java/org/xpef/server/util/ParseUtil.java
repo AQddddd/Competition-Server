@@ -7,8 +7,10 @@ import org.xpef.server.model.po.User;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ParseUtil {
 
@@ -29,11 +31,13 @@ public class ParseUtil {
     }
 
 
-    public static void main(String[] args) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-        User user=new User();
-        user.setId(11);
-        user.setEmail("1111");
-        List<Student> s= parseFromUser(Collections.singletonList(user),Student.class);
-        System.out.println(JSONObject.toJSONString(s.get(0)));
+
+    public static List<Integer> coverToIntegerList(String str){
+
+        return Arrays.stream(str.split(",")).map(Integer::parseInt).collect(Collectors.toList());
+    }
+
+    public static void main(String[] args) {
+        System.out.println(coverToIntegerList("1,2,3"));
     }
 }

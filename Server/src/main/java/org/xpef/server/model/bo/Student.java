@@ -66,11 +66,12 @@ public class Student {
     private Integer isQualified;
 
     public void fixDefault(){
-
-        this.isFunded=UserConstrant.FUNDED;
-        this.isMentor=UserConstrant.STUDENT;
-        this.isQualified=UserConstrant.QUALIFIED;
-        this.isSystem= System.NORMAL;
+        if (this.isFunded==null)
+            this.isFunded=UserConstrant.FUNDED;
+        if (isMentor==null)
+            this.isMentor=UserConstrant.STUDENT;
+        if (isQualified==null) this.isQualified=UserConstrant.QUALIFIED;
+        if (isSystem==null) this.isSystem= System.NORMAL;
 
     }
 

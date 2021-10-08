@@ -15,6 +15,7 @@ import org.xpef.server.model.po.User;
 import org.xpef.server.model.po.UserExample;
 import org.xpef.server.service.MentorService;
 import org.xpef.server.service.StuService;
+import org.xpef.server.service.UserService;
 import org.xpef.server.util.ParseUtil;
 import org.xpef.server.util.Result;
 import org.xpef.server.util.XpNoHandle;
@@ -35,6 +36,9 @@ public class StuServiceImpl implements StuService {
 
     @Resource
     private MentorService mentorService;
+
+    @Resource
+    private UserService userService;
 
     @Override
     public List<Student> getAllStudents(int type) {
@@ -132,7 +136,7 @@ public class StuServiceImpl implements StuService {
                 return new Result<>(false,"insert error");
             }else {
                 logger.info("insert success.");
-                String xpNo=XpNoHandle.buildXpNo(user.getId(),Integer.parseInt(user.getGrade()),user.getRegion());
+                String xpNo=XpNoHandle.buildXpNo(user.getId());
                 user.setXpNo(xpNo);
                 //更新xpNo
                 updateStuInfo(new Student(user));
@@ -176,7 +180,6 @@ public class StuServiceImpl implements StuService {
 
         criteria.andEmailEqualTo(email);
         criteria.andIsDeletedEqualTo(UserConstrant.NOT_DELETE);
-        //criteria.andIsMentorNotEqualTo(UserConstrant.HK_MENTOR);
 
         List<User> users=userMapper.selectByExample(userExample);
         if (users != null&&!users.isEmpty()){
@@ -188,6 +191,20 @@ public class StuServiceImpl implements StuService {
 
     @Override
     public Student getStuByEmail(String email) {
+
+        User user=userService.getUserByEmail(email);
+
+        if (user==null){
+            logger.error("can not find student. email: {}",email);
+        }else {
+            try {
+                List<Student> stuList= ParseUtil.parseFromUser(Collections.singletonList(user),Student.class);
+                logger.info("find student success. info: {}", JSONObject.toJSONString(stuList));
+                return stuList.get(0);
+            }catch (Exception e){
+                logger.error("find student error. msg: {}",e.getMessage());
+            }
+        }
 
         return null;
     }
